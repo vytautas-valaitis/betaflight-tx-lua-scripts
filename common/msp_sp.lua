@@ -12,7 +12,6 @@ LOCAL_SENSOR_ID  = 0x0D
 
 -- Sensor ID used by the MSP server (BF, CF, MW, etc...)
 REMOTE_SENSOR_ID = 0x1B
-
 REQUEST_FRAME_ID = 0x30
 REPLY_FRAME_ID   = 0x32
 

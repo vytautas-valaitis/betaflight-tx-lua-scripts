@@ -38,8 +38,8 @@ local PAGE_PIDS = 1
 local PAGE_RATES = 2
 local PAGE_VTX = 3
 
-local currentPage = PAGE_PIDS
-local currentLine = 1
+local currentPage = PAGE_VTX
+local currentLine = 5
 local saveTS = 0
 local saveTimeout = 0
 local saveRetries = 0
@@ -94,7 +94,7 @@ local menuList = {
 local telemetryScreenActive = false
 local menuActive = false
 
-local function processMspReply(cmd,rx_buf)
+local function processMspReply(cmd, rx_buf)
 
    if cmd == nil or rx_buf == nil then
       return
@@ -116,15 +116,18 @@ local function processMspReply(cmd,rx_buf)
    end
 
    -- ignore replies to write requests for now
-   if cmd == page.write and cmd ~= MSP_VTX_SET_CONFIG then
-      mspSendRequest(MSP_EEPROM_WRITE,{})
+   if cmd == page.write then
+   --if cmd == page.write and cmd ~= MSP_VTX_SET_CONFIG then
+      mspSendRequest(MSP_EEPROM_WRITE, {})
       return
    end
 
-   if cmd == MSP_EEPROM_WRITE or cmd == MSP_VTX_SET_CONFIG then
-      gState = PAGE_DISPLAY
-      page.values = nil
-      saveTS = 0
+   --if cmd == MSP_EEPROM_WRITE or cmd == MSP_VTX_SET_CONFIG then
+   if cmd == MSP_EEPROM_WRITE then
+      --gState = PAGE_DISPLAY
+      --page.values = nil
+      --saveTS = 0
+      invalidatePages()
       return
    end
 
@@ -155,16 +158,23 @@ local function incPage(inc)
    elseif currentPage < 1 then
       currentPage = #(SetupPages)
    end
-   currentLine = 1
+   if currentPage == PAGE_VTX then
+     currentLine = 5
+   else
+     currentLine = 1
+   end
 end
 
 local function incLine(inc)
-   currentLine = currentLine + inc
-   if currentLine > MaxLines() then
-      currentLine = 1
-   elseif currentLine < 1 then
-      currentLine = MaxLines()
-   end
+   repeat
+     currentLine = currentLine + inc
+     if currentLine > MaxLines() then
+        currentLine = 1
+     elseif currentLine < 1 then
+        currentLine = MaxLines()
+     end
+   until SetupPages[currentPage].fields[currentLine].ro ~= true
+
 end
 
 local function incMenu(inc)
@@ -388,7 +398,6 @@ local function run_ui(event)
    local page = SetupPages[currentPage]
 
    if not page.values then
-      -- request values
       requestPage(page)
    end
 
@@ -424,16 +433,33 @@ local freqLookup = {
 }
 
 local function updateVTXFreq(page)
-   page.values["f"] = freqLookup[page.values[2]][page.values[3]]
+  fr = freqLookup[page.values[2]][page.values[3]]
+  it = 1
+  while page.fields[5].table[it] ~= fr do
+    it = it + 1
+  end 
+  page.values["f"] = it 
+end
+
+local function updateVTXband(page)
+  for band=1,5,1 do
+    for channel=1,8,1 do
+      if page.fields[5].table[page.values["f"]] == freqLookup[band][channel] then
+        page.values[2] = band
+        page.values[3] = channel
+        break
+      end
+    end 
+  end
 end
 
 local function postReadVTX(page)
    if page.values[1] == 3 then -- SmartAudio
-      page.fields[3].table = { 25, 200, 500, 800 }
-      page.fields[3].max = 4
+      page.fields[6].table = { 25, 200, 500, 800 } --FIXME
+      page.fields[6].max = 4
    elseif page.values[1] == 4 then -- Tramp
-      page.fields[3].table = { 25, 100, 200, 400, 600 }
-      page.fields[3].max = 5
+      page.fields[6].table = { 25, 100, 200, 400, 600 }
+      page.fields[6].max = 5
    else
       -- TODO: print label on unavailable (0xFF) vs. unsupported (0)
       --page.values = nil
@@ -466,8 +492,6 @@ SetupPages[PAGE_VTX].postRead       = postReadVTX
 SetupPages[PAGE_VTX].getWriteValues = getWriteValuesVTX
 SetupPages[PAGE_VTX].saveMaxRetries = 0
 SetupPages[PAGE_VTX].saveTimeout    = 300 -- 3s
-
-SetupPages[PAGE_VTX].fields[1].upd = updateVTXFreq
-SetupPages[PAGE_VTX].fields[2].upd = updateVTXFreq
+SetupPages[PAGE_VTX].fields[5].upd = updateVTXband
 
 return run_ui, background_ui

@@ -55,12 +55,14 @@ SetupPages = {
       text = {},
       fields = {
          -- Super Rate
-         { t = "Band",    x = 25,  y = 14, sp = 50, i=2, min=1, max=5, table = { "A", "B", "E", "F", "R" } },
-         { t = "Channel", x = 25,  y = 24, sp = 50, i=3, min=1, max=8 },
-         { t = "Power",   x = 25,  y = 34, sp = 50, i=4, min=1 },
-         { t = "Pit",     x = 25,  y = 44, sp = 50, i=5, min=0, max=1, table = { [0]="OFF", "ON" } },
          { t = "Dev",     x = 100, y = 14, sp = 32, i=1, ro=true, table = {[3]="SmartAudio",[4]="Tramp",[255]="None"} },
-         { t = "Freq",    x = 100, y = 24, sp = 32, i="f", ro=true },
+         { t = "Band",    x = 100, y = 24, sp = 50, i=2, ro=true, min=1, max=5, table = {"A", "B", "E", "F", "R"} },
+         { t = "Channel", x = 100, y = 34, sp = 50, i=3, ro=true, min=1, max=8 },
+         { t = "Pit",     x = 100, y = 44, sp = 50, i=5, ro=true, min=0, max=1, table = { [0]="OFF", "ON" } },
+
+         { t = "Freq",    x = 25, y = 14, sp = 50, i="f", ro=false, min=0, max=38, table = { [0]=5645, 5658, 5665, 5685, 5695, 5705, 5725, 5732, 5733, 5740, 5745, 5752, 5760, 5765, 5769, 5771, 5780, 5785, 5790, 5800, 5805, 5806, 5809, 5820, 5825, 5828, 5840, 5843, 5845, 5847, 5860, 5865, 5866, 5880, 5885, 5905, 5917, 5925, 5945 } },
+         { t = "Power",   x = 25, y = 24, sp = 50, i=4, ro=false, min=1 },
+
       },
    }
 }
